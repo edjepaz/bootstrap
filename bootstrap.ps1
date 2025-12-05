@@ -13,7 +13,7 @@
 param(
     [string]$ScriptsRepo = "",
     [string]$TargetPath = ".\scripts",
-    [string]$Branch = "master",
+    [string]$Branch = "main",
     [string]$GitUsername = ""
 )
 
