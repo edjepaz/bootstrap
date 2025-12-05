@@ -4,8 +4,12 @@ Universal one-command script installer for downloading and setting up any privat
 
 ## Usage
 
-Run this command from any Windows machine:
+**Short URL (easiest to type):**
+```powershell
+irm edjepaz.github.io/bootstrap.ps1 | iex
+```
 
+**Full URL:**
 ```powershell
 irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex
 ```
