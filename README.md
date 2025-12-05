@@ -19,23 +19,25 @@ The script will prompt you for your GitHub repository name (e.g., `username/repo
 ## What it does
 
 1. ✅ Prompts for your GitHub repository (if not provided)
-2. ✅ Detects GitHub CLI and offers OAuth authentication (easiest - no PAT needed!)
-3. ✅ Falls back to username-specific HTTPS authentication with PAT
-4. ✅ Checks for Git and installs it if missing (via winget)
-5. ✅ Clones your private scripts repository
-6. ✅ Optionally logs out after clone (for temporary sessions on shared devices)
-7. ✅ Runs any `install.ps1` found in your scripts repo
+2. ✅ Auto-installs Git if missing (via winget)
+3. ✅ Detects GitHub CLI and offers OAuth authentication (easiest - no PAT needed!)
+4. ✅ **Offers to install GitHub CLI** if not found (via winget)
+5. ✅ Falls back to username-specific HTTPS authentication with PAT
+6. ✅ Clones your private scripts repository
+7. ✅ Optionally logs out after clone (for temporary sessions on shared devices)
+8. ✅ Runs any `install.ps1` found in your scripts repo
 
 ## Authentication Options
 
 **Option 1: GitHub CLI (Recommended - No PAT needed!)**
-- Install GitHub CLI: `winget install GitHub.cli`
-- Script will detect and offer browser-based OAuth login
-- Most secure and user-friendly method
+- **Auto-installed if missing** - Script will offer to install via winget
+- Browser-based OAuth login (most user-friendly)
+- Most secure authentication method
 - Supports temporary sessions with auto-logout
+- No need to create or manage tokens
 
 **Option 2: Personal Access Token (PAT)**
-- Used automatically if GitHub CLI is not available
+- Used automatically if GitHub CLI is not available/installed
 - Create PAT at: https://github.com/settings/tokens
 - Git Credential Manager will cache it securely
 - Username-specific to avoid conflicts with multiple accounts
