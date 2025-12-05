@@ -8,7 +8,7 @@
 #>
 
 param(
-    [string]$ScriptsRepo = "youruser/your-private-scripts",
+    [string]$ScriptsRepo = "edjepaz/scripts",
     [string]$TargetPath = "$HOME\MyScripts",
     [string]$Branch = "main"
 )

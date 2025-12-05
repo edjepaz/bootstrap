@@ -7,7 +7,7 @@ One-command script installer for downloading and setting up private scripts repo
 Run this command from any Windows machine:
 
 ```powershell
-irm raw.githubusercontent.com/youruser/bootstrap/main/bootstrap.ps1 | iex
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex
 ```
 
 ## What it does
@@ -22,7 +22,7 @@ irm raw.githubusercontent.com/youruser/bootstrap/main/bootstrap.ps1 | iex
 You can pass parameters:
 
 ```powershell
-irm raw.githubusercontent.com/youruser/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "youruser/scripts" -TargetPath "C:\MyScripts"
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "edjepaz/scripts" -TargetPath "C:\MyScripts"
 ```
 
 ## Requirements
