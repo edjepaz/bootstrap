@@ -3,8 +3,8 @@
 .SYNOPSIS
     Bootstrap script to download and setup private scripts repository
 .DESCRIPTION
-    This script handles GitHub authentication and clones your private scripts repo
-    Usage: irm raw.githubusercontent.com/youruser/bootstrap-scripts/main/bootstrap.ps1 | iex
+    This script uses Git with SSH or HTTPS authentication to clone your private scripts repo
+    Usage: irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex
 #>
 
 param(
@@ -18,56 +18,24 @@ $ErrorActionPreference = "Stop"
 Write-Host "🚀 Bootstrap Script Installer" -ForegroundColor Cyan
 Write-Host "================================`n" -ForegroundColor Cyan
 
-# Check if GitHub CLI is installed
-$ghInstalled = Get-Command gh -ErrorAction SilentlyContinue
+# Check if Git is installed
+$gitInstalled = Get-Command git -ErrorAction SilentlyContinue
 
-if ($ghInstalled) {
-    Write-Host "✓ GitHub CLI found" -ForegroundColor Green
-    
-    # Check if authenticated
-    $ghAuth = gh auth status 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "⚠ GitHub CLI not authenticated" -ForegroundColor Yellow
-        Write-Host "Starting authentication process...`n" -ForegroundColor Yellow
-        gh auth login
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "✗ Authentication failed" -ForegroundColor Red
-            exit 1
-        }
-    } else {
-        Write-Host "✓ GitHub CLI authenticated" -ForegroundColor Green
-    }
-} else {
-    Write-Host "⚠ GitHub CLI not found" -ForegroundColor Yellow
-    Write-Host "Installing GitHub CLI...`n" -ForegroundColor Yellow
-    
-    # Install GitHub CLI using winget
-    if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install --id GitHub.cli --silent
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "✓ GitHub CLI installed" -ForegroundColor Green
-            # Refresh PATH
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-            
-            Write-Host "Authenticating with GitHub...`n" -ForegroundColor Yellow
-            gh auth login
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "✗ Authentication failed" -ForegroundColor Red
-                exit 1
-            }
-        } else {
-            Write-Host "✗ Failed to install GitHub CLI" -ForegroundColor Red
-            Write-Host "`nPlease install manually: https://cli.github.com/" -ForegroundColor Yellow
-            exit 1
-        }
-    } else {
-        Write-Host "✗ winget not found. Please install GitHub CLI manually: https://cli.github.com/" -ForegroundColor Red
-        exit 1
-    }
+if (-not $gitInstalled) {
+    Write-Host "✗ Git is not installed" -ForegroundColor Red
+    Write-Host "Please install Git from: https://git-scm.com/download/win" -ForegroundColor Yellow
+    exit 1
 }
 
-# Clone the private repository
+Write-Host "✓ Git found" -ForegroundColor Green
+
+# Determine clone URL
 Write-Host "`n📦 Cloning private scripts repository..." -ForegroundColor Cyan
+Write-Host "Repository: $ScriptsRepo" -ForegroundColor Gray
+
+# Try HTTPS first (will prompt for credentials if needed)
+$httpsUrl = "https://github.com/$ScriptsRepo.git"
+$sshUrl = "git@github.com:$ScriptsRepo.git"
 
 if (Test-Path $TargetPath) {
     Write-Host "⚠ Target path already exists: $TargetPath" -ForegroundColor Yellow
@@ -75,18 +43,31 @@ if (Test-Path $TargetPath) {
     if ($response -eq 'y') {
         Push-Location $TargetPath
         Write-Host "Pulling latest changes..." -ForegroundColor Yellow
-        git pull origin $Branch
+        git pull origin $Branch 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Repository updated" -ForegroundColor Green
+        } else {
+            Write-Host "⚠ Update failed, continuing..." -ForegroundColor Yellow
+        }
         Pop-Location
-        Write-Host "✓ Repository updated" -ForegroundColor Green
     } else {
         Write-Host "Skipping clone" -ForegroundColor Yellow
     }
 } else {
-    gh repo clone $ScriptsRepo $TargetPath -- --branch $Branch
+    Write-Host "Attempting to clone with HTTPS..." -ForegroundColor Gray
+    Write-Host "(Git will prompt for authentication if needed)" -ForegroundColor Gray
+    
+    # Clone the repository
+    git clone --branch $Branch $httpsUrl $TargetPath 2>&1 | Out-String | Write-Host
+    
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ Repository cloned to: $TargetPath" -ForegroundColor Green
     } else {
         Write-Host "✗ Failed to clone repository" -ForegroundColor Red
+        Write-Host "`nTroubleshooting:" -ForegroundColor Yellow
+        Write-Host "1. Make sure you have access to the repository" -ForegroundColor Gray
+        Write-Host "2. Git may have prompted for credentials - check above" -ForegroundColor Gray
+        Write-Host "3. You can also try manually: git clone $httpsUrl $TargetPath" -ForegroundColor Gray
         exit 1
     }
 }
