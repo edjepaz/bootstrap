@@ -126,7 +126,52 @@ if ($ghInstalled) {
     }
 } else {
     Write-Host "ℹ GitHub CLI not found (optional)" -ForegroundColor DarkGray
-    Write-Host "  Install for easier authentication: winget install GitHub.cli" -ForegroundColor DarkGray
+    Write-Host "  GitHub CLI provides easier authentication via browser OAuth (no PAT needed)" -ForegroundColor DarkGray
+    
+    # Offer to install GitHub CLI if winget is available
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        $response = Read-Host "`nWould you like to install GitHub CLI now? (y/n)"
+        if ($response -eq 'y') {
+            Write-Host "Installing GitHub CLI..." -ForegroundColor Gray
+            winget install --id GitHub.cli -e --silent --accept-package-agreements --accept-source-agreements
+            
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "✓ GitHub CLI installed" -ForegroundColor Green
+                # Refresh PATH
+                $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+                $ghInstalled = Get-Command gh -ErrorAction SilentlyContinue
+                
+                if ($ghInstalled) {
+                    Write-Host "`n🔐 Authenticate with GitHub CLI" -ForegroundColor Cyan
+                    Write-Host "This will open a browser for secure OAuth login" -ForegroundColor Gray
+                    
+                    if ($LogoutAfter) {
+                        Write-Host "Note: You will be logged out after the clone completes" -ForegroundColor Yellow
+                    }
+                    
+                    $authResponse = Read-Host "`nAuthenticate now? (y/n)"
+                    if ($authResponse -eq 'y') {
+                        gh auth login -h github.com -p https -w
+                        if ($LASTEXITCODE -eq 0) {
+                            Write-Host "✓ GitHub CLI authentication successful" -ForegroundColor Green
+                            $ghAuthenticated = $true
+                            $needsGhLogout = $LogoutAfter
+                        } else {
+                            Write-Host "✗ GitHub CLI authentication failed" -ForegroundColor Red
+                            Write-Host "Falling back to manual authentication..." -ForegroundColor Yellow
+                        }
+                    }
+                } else {
+                    Write-Host "⚠ GitHub CLI installed but not in PATH. Please restart your terminal." -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "✗ Failed to install GitHub CLI automatically" -ForegroundColor Red
+                Write-Host "You can install manually: winget install GitHub.cli" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "Continuing without GitHub CLI - will use PAT authentication" -ForegroundColor Gray
+        }
+    }
 }
 
 # Determine clone URL
