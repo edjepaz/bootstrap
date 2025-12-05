@@ -50,8 +50,8 @@ You can pass parameters to skip prompts and customize behavior:
 # Specify repository inline
 irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts"
 
-# Customize target path and branch
-irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -TargetPath "C:\MyScripts" -Branch "main"
+# Customize target path and branch (branch defaults to repository's default branch)
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -TargetPath "C:\MyScripts" -Branch "develop"
 
 # Specify GitHub username for authentication (useful with multiple accounts)
 irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -GitUsername "your-github-username"

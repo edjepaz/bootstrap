@@ -13,7 +13,7 @@
 param(
     [string]$ScriptsRepo = "",
     [string]$TargetPath = ".\scripts",
-    [string]$Branch = "main",
+    [string]$Branch = "",
     [string]$GitUsername = "",
     [switch]$UseGitHubCLI = $false,
     [switch]$LogoutAfter = $false
@@ -44,7 +44,10 @@ if ([string]::IsNullOrWhiteSpace($ScriptsRepo)) {
 
 Write-Host "Repository: $ScriptsRepo" -ForegroundColor Cyan
 Write-Host "Target path: $TargetPath" -ForegroundColor Cyan
-Write-Host "Branch: $Branch`n" -ForegroundColor Cyan
+if (-not [string]::IsNullOrWhiteSpace($Branch)) {
+    Write-Host "Branch: $Branch" -ForegroundColor Cyan
+}
+Write-Host ""
 
 # Check if Git is installed
 $gitInstalled = Get-Command git -ErrorAction SilentlyContinue
@@ -211,7 +214,11 @@ if (Test-Path $TargetPath) {
     if ($response -eq 'y') {
         Push-Location $TargetPath
         Write-Host "Pulling latest changes..." -ForegroundColor Yellow
-        git pull origin $Branch 2>&1 | Out-Null
+        if ([string]::IsNullOrWhiteSpace($Branch)) {
+            git pull 2>&1 | Out-Null
+        } else {
+            git pull origin $Branch 2>&1 | Out-Null
+        }
         if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ Repository updated" -ForegroundColor Green
         } else {
@@ -221,13 +228,18 @@ if (Test-Path $TargetPath) {
     } else {
         Write-Host "Skipping clone" -ForegroundColor Yellow
     }
-} else {
+}else {
     Write-Host "Attempting to clone with HTTPS..." -ForegroundColor Gray
     Write-Host "(Git will prompt for Personal Access Token if needed)" -ForegroundColor Gray
     Write-Host "Note: Password authentication is not supported - use a PAT from https://github.com/settings/tokens" -ForegroundColor DarkGray
     
-    # Clone the repository
-    git clone --branch $Branch $httpsUrl $TargetPath 2>&1 | Out-String | Write-Host
+    # Clone the repository (let Git detect default branch if not specified)
+    if ([string]::IsNullOrWhiteSpace($Branch)) {
+        Write-Host "Detecting default branch..." -ForegroundColor Gray
+        git clone $httpsUrl $TargetPath 2>&1 | Out-String | Write-Host
+    } else {
+        git clone --branch $Branch $httpsUrl $TargetPath 2>&1 | Out-String | Write-Host
+    }
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ Repository cloned to: $TargetPath" -ForegroundColor Green
