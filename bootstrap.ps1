@@ -126,8 +126,19 @@ if (Test-Path $TargetPath) {
 # Check for install script in the cloned repo
 $installScript = Join-Path $TargetPath "install.ps1"
 if (Test-Path $installScript) {
-    Write-Host "`n🔧 Found install script, running setup..." -ForegroundColor Cyan
-    & $installScript
+    Write-Host "`n🔧 Found install.ps1 in repository" -ForegroundColor Cyan
+    Write-Host "Location: $installScript" -ForegroundColor Gray
+    Write-Host "`n⚠ WARNING: This script will be executed on your system" -ForegroundColor Yellow
+    $response = Read-Host "Do you want to run it? (y/n)"
+    
+    if ($response -eq 'y') {
+        Write-Host "`nRunning install script..." -ForegroundColor Cyan
+        & $installScript
+        Write-Host "`n✓ Install script completed" -ForegroundColor Green
+    } else {
+        Write-Host "`nSkipped running install.ps1" -ForegroundColor Yellow
+        Write-Host "You can run it manually later: & '$installScript'" -ForegroundColor Gray
+    }
 } else {
     Write-Host "`n✓ Setup complete! Scripts are in: $TargetPath" -ForegroundColor Green
     Write-Host "No install.ps1 found in repository - manual setup may be needed" -ForegroundColor Yellow
