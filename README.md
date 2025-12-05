@@ -1,6 +1,6 @@
 # Bootstrap
 
-One-command script installer for downloading and setting up private scripts repository.
+Universal one-command script installer for downloading and setting up any private scripts repository.
 
 ## Usage
 
@@ -10,20 +10,27 @@ Run this command from any Windows machine:
 irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex
 ```
 
+The script will prompt you for your GitHub repository name (e.g., `username/repo-name`).
+
 ## What it does
 
-1. ✅ Checks for Git installation
-2. ✅ Clones your private scripts repository using Git credentials
-3. ✅ Runs any `install.ps1` found in your scripts repo
+1. ✅ Prompts for your GitHub repository (if not provided)
+2. ✅ Checks for Git installation
+3. ✅ Clones your private scripts repository using Git credentials
+4. ✅ Runs any `install.ps1` found in your scripts repo
 
 **Note:** Git will prompt for your GitHub credentials when cloning the private repository.
 
 ## Customization
 
-You can pass parameters:
+You can pass parameters to skip the prompt:
 
 ```powershell
-irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "edjepaz/scripts" -TargetPath "C:\MyScripts"
+# Specify repository inline
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts"
+
+# Customize target path and branch
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -TargetPath "C:\MyScripts" -Branch "main"
 ```
 
 ## Requirements

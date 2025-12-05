@@ -5,10 +5,13 @@
 .DESCRIPTION
     This script uses Git with SSH or HTTPS authentication to clone your private scripts repo
     Usage: irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex
+    
+    You can also pass parameters:
+    irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/repo" -TargetPath "C:\MyScripts"
 #>
 
 param(
-    [string]$ScriptsRepo = "edjepaz/scripts",
+    [string]$ScriptsRepo = "",
     [string]$TargetPath = "$HOME\MyScripts",
     [string]$Branch = "master"
 )
@@ -17,6 +20,28 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Bootstrap Script Installer" -ForegroundColor Cyan
 Write-Host "================================`n" -ForegroundColor Cyan
+
+# Prompt for repository if not provided
+if ([string]::IsNullOrWhiteSpace($ScriptsRepo)) {
+    Write-Host "Enter your GitHub repository (format: username/repo-name)" -ForegroundColor Yellow
+    Write-Host "Example: edjepaz/scripts" -ForegroundColor Gray
+    $ScriptsRepo = Read-Host "Repository"
+    
+    if ([string]::IsNullOrWhiteSpace($ScriptsRepo)) {
+        Write-Host "✗ Repository is required" -ForegroundColor Red
+        exit 1
+    }
+    
+    # Validate format
+    if ($ScriptsRepo -notmatch '^[\w-]+/[\w-]+$') {
+        Write-Host "✗ Invalid repository format. Use: username/repo-name" -ForegroundColor Red
+        exit 1
+    }
+}
+
+Write-Host "Repository: $ScriptsRepo" -ForegroundColor Cyan
+Write-Host "Target path: $TargetPath" -ForegroundColor Cyan
+Write-Host "Branch: $Branch`n" -ForegroundColor Cyan
 
 # Check if Git is installed
 $gitInstalled = Get-Command git -ErrorAction SilentlyContinue
