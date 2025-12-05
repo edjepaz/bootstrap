@@ -1,0 +1,7 @@
+# PowerShell
+*.ps1~
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
