@@ -10,7 +10,7 @@
 param(
     [string]$ScriptsRepo = "edjepaz/scripts",
     [string]$TargetPath = "$HOME\MyScripts",
-    [string]$Branch = "main"
+    [string]$Branch = "master"
 )
 
 $ErrorActionPreference = "Stop"
