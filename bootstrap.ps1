@@ -12,7 +12,7 @@
 
 param(
     [string]$ScriptsRepo = "",
-    [string]$TargetPath = "$HOME\MyScripts",
+    [string]$TargetPath = ".\scripts",
     [string]$Branch = "master"
 )
 
