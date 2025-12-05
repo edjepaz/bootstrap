@@ -13,7 +13,8 @@
 param(
     [string]$ScriptsRepo = "",
     [string]$TargetPath = ".\scripts",
-    [string]$Branch = "master"
+    [string]$Branch = "master",
+    [string]$GitUsername = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -84,8 +85,25 @@ Write-Host "✓ Git found" -ForegroundColor Green
 Write-Host "`n📦 Cloning private scripts repository..." -ForegroundColor Cyan
 Write-Host "Repository: $ScriptsRepo" -ForegroundColor Gray
 
-# Try HTTPS first (will prompt for credentials if needed)
-$httpsUrl = "https://github.com/$ScriptsRepo.git"
+# Extract or prompt for GitHub username
+if ([string]::IsNullOrWhiteSpace($GitUsername)) {
+    # Extract username from repository (owner part)
+    $repoOwner = $ScriptsRepo.Split('/')[0]
+    Write-Host "`nGitHub username for authentication (default: $repoOwner)" -ForegroundColor Yellow
+    Write-Host "Press Enter to use '$repoOwner' or type a different username:" -ForegroundColor Gray
+    $inputUsername = Read-Host "Username"
+    
+    if ([string]::IsNullOrWhiteSpace($inputUsername)) {
+        $GitUsername = $repoOwner
+    } else {
+        $GitUsername = $inputUsername
+    }
+}
+
+Write-Host "Authenticating as: $GitUsername" -ForegroundColor Cyan
+
+# Build HTTPS URL with username to force user-specific authentication
+$httpsUrl = "https://$GitUsername@github.com/$ScriptsRepo.git"
 $sshUrl = "git@github.com:$ScriptsRepo.git"
 
 if (Test-Path $TargetPath) {
@@ -106,7 +124,8 @@ if (Test-Path $TargetPath) {
     }
 } else {
     Write-Host "Attempting to clone with HTTPS..." -ForegroundColor Gray
-    Write-Host "(Git will prompt for authentication if needed)" -ForegroundColor Gray
+    Write-Host "(Git will prompt for Personal Access Token if needed)" -ForegroundColor Gray
+    Write-Host "Note: Password authentication is not supported - use a PAT from https://github.com/settings/tokens" -ForegroundColor DarkGray
     
     # Clone the repository
     git clone --branch $Branch $httpsUrl $TargetPath 2>&1 | Out-String | Write-Host

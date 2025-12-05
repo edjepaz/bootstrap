@@ -19,11 +19,12 @@ The script will prompt you for your GitHub repository name (e.g., `username/repo
 ## What it does
 
 1. ✅ Prompts for your GitHub repository (if not provided)
-2. ✅ Checks for Git and installs it if missing (via winget)
-3. ✅ Clones your private scripts repository using Git credentials
-4. ✅ Runs any `install.ps1` found in your scripts repo
+2. ✅ Prompts for GitHub username (defaults to repository owner)
+3. ✅ Checks for Git and installs it if missing (via winget)
+4. ✅ Clones your private scripts repository using user-specific authentication
+5. ✅ Runs any `install.ps1` found in your scripts repo
 
-**Note:** Git will prompt for your GitHub credentials when cloning the private repository.
+**Note:** The script uses username-specific HTTPS authentication to avoid conflicts when multiple GitHub accounts are configured on the same machine. Git will prompt for your Personal Access Token (PAT) when cloning the private repository.
 
 ## Customization
 
@@ -35,6 +36,9 @@ irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -Script
 
 # Customize target path and branch
 irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -TargetPath "C:\MyScripts" -Branch "main"
+
+# Specify GitHub username for authentication (useful with multiple accounts)
+irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -ScriptsRepo "username/scripts" -GitUsername "your-github-username"
 ```
 
 ## Requirements
