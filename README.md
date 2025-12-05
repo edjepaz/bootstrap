@@ -15,7 +15,7 @@ The script will prompt you for your GitHub repository name (e.g., `username/repo
 ## What it does
 
 1. ✅ Prompts for your GitHub repository (if not provided)
-2. ✅ Checks for Git installation
+2. ✅ Checks for Git and installs it if missing (via winget)
 3. ✅ Clones your private scripts repository using Git credentials
 4. ✅ Runs any `install.ps1` found in your scripts repo
 
@@ -37,6 +37,7 @@ irm raw.githubusercontent.com/edjepaz/bootstrap/main/bootstrap.ps1 | iex -Script
 
 - Windows 10/11
 - PowerShell 5.1 or later
-- Git for Windows
 - GitHub account with access to your private scripts repository
 - Internet connection
+
+**Optional:** Git for Windows (will be auto-installed if missing and winget is available)

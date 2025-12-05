@@ -47,9 +47,35 @@ Write-Host "Branch: $Branch`n" -ForegroundColor Cyan
 $gitInstalled = Get-Command git -ErrorAction SilentlyContinue
 
 if (-not $gitInstalled) {
-    Write-Host "✗ Git is not installed" -ForegroundColor Red
-    Write-Host "Please install Git from: https://git-scm.com/download/win" -ForegroundColor Yellow
-    exit 1
+    Write-Host "⚠ Git not found" -ForegroundColor Yellow
+    Write-Host "Attempting to install Git...`n" -ForegroundColor Yellow
+    
+    # Try to install via winget
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "Installing Git for Windows..." -ForegroundColor Gray
+        winget install --id Git.Git -e --silent --accept-package-agreements --accept-source-agreements
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Git installed" -ForegroundColor Green
+            # Refresh PATH
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+            $gitInstalled = Get-Command git -ErrorAction SilentlyContinue
+            
+            if (-not $gitInstalled) {
+                Write-Host "⚠ Git installed but not in PATH. Please restart your terminal." -ForegroundColor Yellow
+                Write-Host "Then run this script again." -ForegroundColor Yellow
+                exit 1
+            }
+        } else {
+            Write-Host "✗ Failed to install Git automatically" -ForegroundColor Red
+            Write-Host "Please install Git manually from: https://git-scm.com/download/win" -ForegroundColor Yellow
+            exit 1
+        }
+    } else {
+        Write-Host "✗ winget not available" -ForegroundColor Red
+        Write-Host "Please install Git manually from: https://git-scm.com/download/win" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
 Write-Host "✓ Git found" -ForegroundColor Green
