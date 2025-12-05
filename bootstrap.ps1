@@ -14,7 +14,9 @@ param(
     [string]$ScriptsRepo = "",
     [string]$TargetPath = ".\scripts",
     [string]$Branch = "main",
-    [string]$GitUsername = ""
+    [string]$GitUsername = "",
+    [switch]$UseGitHubCLI = $false,
+    [switch]$LogoutAfter = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -81,12 +83,58 @@ if (-not $gitInstalled) {
 
 Write-Host "✓ Git found" -ForegroundColor Green
 
+# Check for GitHub CLI and handle authentication
+$ghInstalled = Get-Command gh -ErrorAction SilentlyContinue
+$ghAuthenticated = $false
+$needsGhLogout = $false
+
+if ($ghInstalled) {
+    Write-Host "✓ GitHub CLI found" -ForegroundColor Green
+    
+    # Check if already authenticated
+    $ghStatus = gh auth status 2>&1 | Out-String
+    if ($ghStatus -match "Logged in to github.com") {
+        $ghAuthenticated = $true
+        Write-Host "✓ Already authenticated with GitHub CLI" -ForegroundColor Green
+    }
+    
+    # If not authenticated or UseGitHubCLI is explicitly requested
+    if (-not $ghAuthenticated -or $UseGitHubCLI) {
+        if (-not $ghAuthenticated) {
+            Write-Host "`n🔐 GitHub CLI authentication required" -ForegroundColor Cyan
+            Write-Host "This will open a browser for secure OAuth login" -ForegroundColor Gray
+            
+            if ($LogoutAfter) {
+                Write-Host "Note: You will be logged out after the clone completes" -ForegroundColor Yellow
+            }
+            
+            $response = Read-Host "`nAuthenticate with GitHub CLI? (y/n)"
+            if ($response -eq 'y') {
+                gh auth login -h github.com -p https -w
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "✓ GitHub CLI authentication successful" -ForegroundColor Green
+                    $ghAuthenticated = $true
+                    $needsGhLogout = $LogoutAfter
+                } else {
+                    Write-Host "✗ GitHub CLI authentication failed" -ForegroundColor Red
+                    Write-Host "Falling back to manual authentication..." -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "Skipping GitHub CLI authentication" -ForegroundColor Yellow
+            }
+        }
+    }
+} else {
+    Write-Host "ℹ GitHub CLI not found (optional)" -ForegroundColor DarkGray
+    Write-Host "  Install for easier authentication: winget install GitHub.cli" -ForegroundColor DarkGray
+}
+
 # Determine clone URL
 Write-Host "`n📦 Cloning private scripts repository..." -ForegroundColor Cyan
 Write-Host "Repository: $ScriptsRepo" -ForegroundColor Gray
 
-# Extract or prompt for GitHub username
-if ([string]::IsNullOrWhiteSpace($GitUsername)) {
+# Extract or prompt for GitHub username (only if not using authenticated gh)
+if ([string]::IsNullOrWhiteSpace($GitUsername) -and -not $ghAuthenticated) {
     # Extract username from repository (owner part)
     $repoOwner = $ScriptsRepo.Split('/')[0]
     Write-Host "`nGitHub username for authentication (default: $repoOwner)" -ForegroundColor Yellow
@@ -100,10 +148,16 @@ if ([string]::IsNullOrWhiteSpace($GitUsername)) {
     }
 }
 
-Write-Host "Authenticating as: $GitUsername" -ForegroundColor Cyan
+if (-not $ghAuthenticated -and $GitUsername) {
+    Write-Host "Authenticating as: $GitUsername" -ForegroundColor Cyan
+}
 
-# Build HTTPS URL with username to force user-specific authentication
-$httpsUrl = "https://$GitUsername@github.com/$ScriptsRepo.git"
+# Build HTTPS URL with username to force user-specific authentication (if not using gh)
+if ($ghAuthenticated) {
+    $httpsUrl = "https://github.com/$ScriptsRepo.git"
+} else {
+    $httpsUrl = "https://$GitUsername@github.com/$ScriptsRepo.git"
+}
 $sshUrl = "git@github.com:$ScriptsRepo.git"
 
 if (Test-Path $TargetPath) {
@@ -161,6 +215,17 @@ if (Test-Path $installScript) {
 } else {
     Write-Host "`n✓ Setup complete! Scripts are in: $TargetPath" -ForegroundColor Green
     Write-Host "No install.ps1 found in repository - manual setup may be needed" -ForegroundColor Yellow
+}
+
+# Handle GitHub CLI logout if requested
+if ($needsGhLogout -and $ghInstalled) {
+    Write-Host "`n🔓 Logging out from GitHub CLI..." -ForegroundColor Cyan
+    gh auth logout --hostname github.com 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "✓ Logged out successfully - credentials removed from this device" -ForegroundColor Green
+    } else {
+        Write-Host "⚠ Logout may have failed - you can manually logout with: gh auth logout" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "`n✨ Bootstrap complete!" -ForegroundColor Green
